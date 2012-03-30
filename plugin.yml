@@ -1,0 +1,21 @@
+name: DisguiseTester
+main: pgDev.bukkit.DisguiseTester.DisguiseTester
+version: 0.1
+author: PG Dev Team
+authors: [Devil Boy]
+description: Experiment with disguises!
+depend: [DisguiseCraft]
+softdepend: [SpoutPlugin]
+
+commands:
+   dt:
+      description: The main disguise testing command.
+      usage: /<command>
+
+permissions:
+    disguisetester.disguise.create:
+        default: op
+        description: Can create test disguises.
+    disguisetester.disguise.wear:
+        default: op
+        description: Can wear test disguises.

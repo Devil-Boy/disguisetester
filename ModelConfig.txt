@@ -1,0 +1,18 @@
+#
+# DisguiseTester Configuration
+#
+
+# Packet Monitoring
+#	If you have SpoutPlugin on your server, you can
+#	monitor the following packets using this option:
+#		-24 = entity spawn
+#		-28 = entity velocity
+#		-29 = destroy entity
+#		-30 = just an entity packet
+#		-31 = entity relative move
+#		-32 = entity look
+#		-33 = entity look and relative move
+#		-34 = entity teleport
+#	Information about these outgoing packets will
+#	be output to the console.
+packetDebug=false
