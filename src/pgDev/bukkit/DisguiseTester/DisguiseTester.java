@@ -154,7 +154,73 @@ public class DisguiseTester extends JavaPlugin {
 						}
     				}
     			} else if (args[0].equalsIgnoreCase("index")) {
-    				
+    				if (args.length < 6) {
+    					sender.sendMessage(ChatColor.GREEN + "Usage: /dt index <test disguise name> <add/edit> <index> <byte/short/int/string> <value>");
+    				} else {
+    					if (testDisguises.containsKey(args[1])) {
+    						Disguise disguise = testDisguises.get(args[1]).clone();
+    						int index;
+    						Object value;
+    						try {
+    							index = Integer.decode(args[3]);
+    						} catch (NumberFormatException e) {
+    							sender.sendMessage(ChatColor.RED + "Invalid index specified");
+    							return true;
+    						}
+    						if (args[4].equalsIgnoreCase("byte")) {
+    							try {
+    								Byte num = Byte.decode(args[5]);
+    								value = num.byteValue();
+    							} catch (NumberFormatException e) {
+    								sender.sendMessage("The byte value could not be decoded");
+    								return true;
+    							}
+    						} else if (args[4].equalsIgnoreCase("int")) {
+    							try {
+    								Integer num = Integer.decode(args[5]);
+    								value = num.intValue();
+    							} catch (NumberFormatException e) {
+    								sender.sendMessage("The int value could not be decoded");
+    								return true;
+    							}
+    						} else if (args[4].equalsIgnoreCase("short")) {
+    							try {
+    								Short num = Short.decode(args[5]);
+    								value = num.shortValue();
+    							} catch (NumberFormatException e) {
+    								sender.sendMessage("The short value could not be decoded");
+    								return true;
+    							}
+    						} else if (args[4].equalsIgnoreCase("string")) {
+    							value = args[5];
+    						} else {
+    							sender.sendMessage(ChatColor.RED + "You did not specify a valid data type");
+    							return true;
+    						}
+    						if (args[2].equalsIgnoreCase("add")) {
+    							try {
+    								disguise.metadata.a(index, value);
+    							} catch (Exception e) {
+    								sender.sendMessage(ChatColor.RED + "The index value could not be added: " + ChatColor.ITALIC + e);
+    								return true;
+    							}
+    						} else if (args[2].equalsIgnoreCase("edit")) {
+    							try {
+    								disguise.metadata.watch(index, value);
+    							} catch (Exception e) {
+    								sender.sendMessage(ChatColor.RED + "The index value could not be edited: " + ChatColor.ITALIC + e);
+    								return true;
+    							}
+    						} else {
+    							sender.sendMessage(ChatColor.RED + "Index action not recognized");
+    							return true;
+    						}
+    						testDisguises.put(args[1], disguise);
+    						sender.sendMessage(ChatColor.GOLD + "Test disguise \"" + args[1] + "\" successfully modified");
+    					} else {
+    						sender.sendMessage(ChatColor.RED + "A disguise with the specified name was not found");
+    					}
+    				}
     			} else if (args[0].equalsIgnoreCase("delete")) {
     				if (args.length < 2) {
     					sender.sendMessage(ChatColor.GREEN + "Usage: /dt delete <test disguise name>");
@@ -166,6 +232,8 @@ public class DisguiseTester extends JavaPlugin {
     						sender.sendMessage(ChatColor.RED + "A test disguise with the specified name could not be found");
     					}
     				}
+    			} else {
+    				sender.sendMessage(ChatColor.RED + "First parameter not recognized");
     			}
     		} else {
     			sender.sendMessage(ChatColor.RED + "You do not have the permission to use this command.");
