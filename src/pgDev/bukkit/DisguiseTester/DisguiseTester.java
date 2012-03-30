@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Properties;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,7 +19,6 @@ import pgDev.bukkit.DisguiseCraft.Disguise;
 import pgDev.bukkit.DisguiseCraft.Disguise.MobType;
 import pgDev.bukkit.DisguiseCraft.DisguiseCraft;
 import pgDev.bukkit.DisguiseCraft.api.DisguiseCraftAPI;
-import pgDev.bukkit.DisguiseCraft.debug.DebugPacketOutput;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -133,7 +133,44 @@ public class DisguiseTester extends JavaPlugin {
     
     // Command Handling
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    	
+    	if (label.equalsIgnoreCase("dt")) {
+    		if (!(sender instanceof Player) || hasPermissions((Player) sender, "disguisetester.disguise.create")) {
+    			if (args.length == 0) { // Needs help
+    				sender.sendMessage(ChatColor.GREEN + "Usage: /dt [create/index/delete] <test disguise name>");
+    			} else if (args[0].equalsIgnoreCase("create")) {
+    				if (args.length < 3) {
+    					sender.sendMessage(ChatColor.GREEN + "Usage: /dt create <test disguise name> <mobtype>");
+    				} else {
+    					if (isDC(args[1])) {
+							sender.sendMessage(ChatColor.RED + "That test disguise name may conflict with DisguiseCraft. Please use another.");
+						} else {
+							MobType type = MobType.fromString(args[2]);
+	    					if (type == null) {
+	    						sender.sendMessage(ChatColor.RED + "Mob type not recognized");
+	    					} else {
+	    						testDisguises.put(args[1], new Disguise(dcAPI.newEntityID(), type));
+	    						sender.sendMessage(ChatColor.GOLD + "Test disguise \"" + args[1] + "\" created");
+	    					}
+						}
+    				}
+    			} else if (args[0].equalsIgnoreCase("index")) {
+    				
+    			} else if (args[0].equalsIgnoreCase("delete")) {
+    				if (args.length < 2) {
+    					sender.sendMessage(ChatColor.GREEN + "Usage: /dt delete <test disguise name>");
+    				} else {
+    					if (testDisguises.containsKey(args[1])) {
+    						testDisguises.remove(args[1]);
+    						sender.sendMessage(ChatColor.GOLD + "Test disguise \"" + args[1] + "\" deleted");
+    					} else {
+    						sender.sendMessage(ChatColor.RED + "A test disguise with the specified name could not be found");
+    					}
+    				}
+    			}
+    		} else {
+    			sender.sendMessage(ChatColor.RED + "You do not have the permission to use this command.");
+    		}
+    	}
     	return true;
     }
 }

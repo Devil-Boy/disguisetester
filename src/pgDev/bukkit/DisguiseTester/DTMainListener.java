@@ -27,6 +27,7 @@ public class DTMainListener implements Listener {
 						plugin.dcAPI.disguisePlayer(disguisee, disguise);
 					}
 				}
+				event.setCancelled(true);
 			}
 		}
 	}
