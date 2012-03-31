@@ -1,5 +1,6 @@
 package pgDev.bukkit.DisguiseTester;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 
@@ -26,6 +27,7 @@ public class DTMainListener implements Listener {
 					} else {
 						plugin.dcAPI.disguisePlayer(disguisee, disguise);
 					}
+					disguisee.sendMessage(ChatColor.GOLD + "You have taken the disguise: " + disguiseName);
 					event.setCancelled(true);
 				}
 			}
