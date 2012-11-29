@@ -44,7 +44,7 @@ public class DTMainListener implements Listener {
 	@EventHandler
 	public void onUnDisguise(PlayerUndisguiseEvent event) {
 		if (!event.isCancelled()) {
-			plugin.disguiseIDs.remove(plugin.dcAPI.getDisguise(event.getPlayer()).entityID);
+			plugin.disguiseIDs.remove((Object) plugin.dcAPI.getDisguise(event.getPlayer()).entityID);
 		}
 	}
 }
