@@ -1,6 +1,6 @@
 name: DisguiseTester
 main: pgDev.bukkit.DisguiseTester.DisguiseTester
-version: 0.2
+version: 0.3
 author: PG Dev Team
 authors: [Devil Boy]
 description: Experiment with disguises!
@@ -10,6 +10,10 @@ softdepend: [SpoutPlugin]
 commands:
    dt:
       description: The main disguise testing command.
+      usage: /<command>
+   dpacket:
+      description: The packet manipulation command.
+      aliases: [dp]
       usage: /<command>
 
 permissions:

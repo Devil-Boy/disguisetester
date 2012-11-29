@@ -2,6 +2,7 @@ package pgDev.bukkit.DisguiseTester;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Properties;
@@ -15,9 +16,9 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import pgDev.bukkit.DisguiseCraft.Disguise;
-import pgDev.bukkit.DisguiseCraft.Disguise.MobType;
 import pgDev.bukkit.DisguiseCraft.DisguiseCraft;
+import pgDev.bukkit.DisguiseCraft.disguise.*;
+import pgDev.bukkit.DisguiseCraft.listeners.DCCommandListener;
 import pgDev.bukkit.DisguiseCraft.api.DisguiseCraftAPI;
 
 import com.nijiko.permissions.PermissionHandler;
@@ -128,7 +129,8 @@ public class DisguiseTester extends JavaPlugin {
     
     // Functions
     public boolean isDC(String arg) {
-    	return MobType.subTypes.contains(arg) || MobType.fromString(arg) != null || arg.toLowerCase().startsWith("hold");
+    	return DisguiseType.subTypes.contains(arg) || DisguiseType.fromString(arg) != null ||
+    			arg.toLowerCase().startsWith("hold") || Arrays.asList(DCCommandListener.subCommands).contains(arg);
     }
     
     // Command Handling
@@ -144,7 +146,7 @@ public class DisguiseTester extends JavaPlugin {
     					if (isDC(args[1])) {
 							sender.sendMessage(ChatColor.RED + "That test disguise name may conflict with DisguiseCraft. Please use another.");
 						} else {
-							MobType type = MobType.fromString(args[2]);
+							DisguiseType type = DisguiseType.fromString(args[2]);
 	    					if (type == null) {
 	    						sender.sendMessage(ChatColor.RED + "Mob type not recognized");
 	    					} else {
@@ -238,6 +240,8 @@ public class DisguiseTester extends JavaPlugin {
     		} else {
     			sender.sendMessage(ChatColor.RED + "You do not have the permission to use this command.");
     		}
+    	} else if (label.equalsIgnoreCase("dpacket") || label.equalsIgnoreCase("dp")) {
+    		
     	}
     	return true;
     }

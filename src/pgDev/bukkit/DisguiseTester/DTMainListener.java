@@ -4,7 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 
-import pgDev.bukkit.DisguiseCraft.Disguise;
+import pgDev.bukkit.DisguiseCraft.disguise.*;
 import pgDev.bukkit.DisguiseCraft.api.*;
 
 public class DTMainListener implements Listener {
