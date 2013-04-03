@@ -1,4 +1,4 @@
-package pgDev.bukkit.DisguiseTester;
+/*package pgDev.bukkit.DisguiseTester;
 
 import java.lang.reflect.Field;
 
@@ -129,4 +129,4 @@ public class DTPacketListener implements PacketListener {
 		}
 		return true;
 	}
-}
+}*/

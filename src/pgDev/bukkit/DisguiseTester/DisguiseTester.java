@@ -2,6 +2,7 @@ package pgDev.bukkit.DisguiseTester;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -44,6 +45,21 @@ public class DisguiseTester extends JavaPlugin {
     // Disguise Databases
     public LinkedList<Integer> disguiseIDs = new LinkedList<Integer>();
     public HashMap<String, Disguise> testDisguises = new HashMap<String, Disguise>();
+    
+    // Metadata editing methods
+    public Method addData;
+    public Method editData;
+    
+    public void onLoad() {
+    	try {
+	    	addData = Disguise.class.getDeclaredMethod("mAdd", int.class, Object.class);
+	    	addData.setAccessible(true);
+	        editData = Disguise.class.getDeclaredMethod("mWatch", int.class, Object.class);
+	        editData.setAccessible(true);
+    	} catch (Exception e) {
+    		System.out.println("DisguiseTester could not find the methods it needs!");
+    	}
+    }
 	
 	public void onEnable() {
 		// Check for the plugin directory (create if it does not exist)
@@ -83,7 +99,7 @@ public class DisguiseTester extends JavaPlugin {
         setupDisguiseCraft();
 		if (pluginSettings.packetDebug) {
 			if (spoutEnabled()) {
-				new DTPacketListener(this);
+				//new DTPacketListener(this);
 			} else {
 				System.out.println("DisguiseTester's packet monitor requires Spout.");
 			}
@@ -201,14 +217,14 @@ public class DisguiseTester extends JavaPlugin {
     						}
     						if (args[2].equalsIgnoreCase("add")) {
     							try {
-    								disguise.metadata.a(index, value);
+    								addData.invoke(disguise, index, value);
     							} catch (Exception e) {
     								sender.sendMessage(ChatColor.RED + "The index value could not be added: " + ChatColor.ITALIC + e);
     								return true;
     							}
     						} else if (args[2].equalsIgnoreCase("edit")) {
     							try {
-    								disguise.metadata.watch(index, value);
+    								editData.invoke(disguise, index, value);
     							} catch (Exception e) {
     								sender.sendMessage(ChatColor.RED + "The index value could not be edited: " + ChatColor.ITALIC + e);
     								return true;
