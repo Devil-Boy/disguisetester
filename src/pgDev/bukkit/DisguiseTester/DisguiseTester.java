@@ -2,17 +2,20 @@ package pgDev.bukkit.DisguiseTester;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,21 +23,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 import pgDev.bukkit.DisguiseCraft.DisguiseCraft;
 import pgDev.bukkit.DisguiseCraft.disguise.*;
 import pgDev.bukkit.DisguiseCraft.listeners.DCCommandListener;
+import pgDev.bukkit.DisguiseCraft.listeners.DCPacketListener;
 import pgDev.bukkit.DisguiseCraft.api.DisguiseCraftAPI;
-
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class DisguiseTester extends JavaPlugin {
 	// File Locations
     static String pluginMainDir = "./plugins/DisguiseTester";
     static String pluginConfigLocation = pluginMainDir + "/DisguiseTester.cfg";
     
-	// Permissions support
-    static PermissionHandler Permissions;
+    // Logger
+    Logger logger;
     
     // DisguiseCraft Hook
+    DisguiseCraft dc;
     DisguiseCraftAPI dcAPI;
+    DCPacketListener dcPL;
     
     // Listener
     DTMainListener mainListener = new DTMainListener(this);
@@ -43,14 +46,17 @@ public class DisguiseTester extends JavaPlugin {
     public DTConfig pluginSettings;
     
     // Disguise Databases
-    public LinkedList<Integer> disguiseIDs = new LinkedList<Integer>();
-    public HashMap<String, Disguise> testDisguises = new HashMap<String, Disguise>();
+    public List<Integer> disguiseIDs = new LinkedList<Integer>();
+    public Map<String, Disguise> testDisguises = new HashMap<String, Disguise>();
+    public Map<String, Integer> objectData = new HashMap<String, Integer>();
     
     // Metadata editing methods
     public Method addData;
     public Method editData;
     
     public void onLoad() {
+    	logger = getLogger();
+    	
     	try {
 	    	addData = Disguise.class.getDeclaredMethod("mAdd", int.class, Object.class);
 	    	addData.setAccessible(true);
@@ -95,7 +101,6 @@ public class DisguiseTester extends JavaPlugin {
 		pm.registerEvents(mainListener, this);
 		
 		// Integrate!
-        setupPermissions();
         setupDisguiseCraft();
 		if (pluginSettings.packetDebug) {
 			if (spoutEnabled()) {
@@ -113,30 +118,19 @@ public class DisguiseTester extends JavaPlugin {
 	public void onDisable() {
 		System.out.println("DisguiseTester disabled!");
 	}
-	
-	// Permissions Methods
-    private void setupPermissions() {
-        Plugin permissions = this.getServer().getPluginManager().getPlugin("Permissions");
-
-        if (Permissions == null) {
-            if (permissions != null) {
-                Permissions = ((Permissions)permissions).getHandler();
-            } else {
-            }
-        }
-    }
-    
-    public boolean hasPermissions(Player player, String node) {
-        if (Permissions != null) {
-        	return Permissions.has(player, node);
-        } else {
-            return player.hasPermission(node);
-        }
-    }
     
     // DC API Obtainer
     public void setupDisguiseCraft() {
+    	dc = (DisguiseCraft) getServer().getPluginManager().getPlugin("DisguiseCraft");
     	dcAPI = DisguiseCraft.getAPI();
+    	
+    	try {
+    		Field field = dc.getClass().getDeclaredField("packetListener");
+    		field.setAccessible(true);
+			dcPL = (DCPacketListener) field.get(dc);
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Could not get packetlistener object", e);
+		}
     }
     
     public boolean spoutEnabled() {
@@ -151,10 +145,10 @@ public class DisguiseTester extends JavaPlugin {
     
     // Command Handling
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    	if (label.equalsIgnoreCase("dt")) {
-    		if (!(sender instanceof Player) || hasPermissions((Player) sender, "disguisetester.disguise.create")) {
+    	if (command.getName().equalsIgnoreCase("dt")) {
+    		if (sender.hasPermission("disguisetester.disguise.create")) {
     			if (args.length == 0) { // Needs help
-    				sender.sendMessage(ChatColor.GREEN + "Usage: /dt [create/index/delete] <test disguise name>");
+    				sender.sendMessage(ChatColor.GREEN + "Usage: /dt [create/index/objectdata/delete] <test disguise name>");
     			} else if (args[0].equalsIgnoreCase("create")) {
     				if (args.length < 3) {
     					sender.sendMessage(ChatColor.GREEN + "Usage: /dt create <test disguise name> <mobtype>");
@@ -239,12 +233,37 @@ public class DisguiseTester extends JavaPlugin {
     						sender.sendMessage(ChatColor.RED + "A disguise with the specified name was not found");
     					}
     				}
+    			} else if (args[0].equalsIgnoreCase("objectdata")) {
+    				if (args.length < 3) {
+    					sender.sendMessage(ChatColor.GREEN + "Usage: /" + label + " objectdata <test disguise name> <data value>");
+    				} else {
+    					if (testDisguises.containsKey(args[1])) {
+    						Disguise disguise = testDisguises.get(args[1]);
+    						
+    						if (disguise.type.isObject()) {
+    							try {
+        							objectData.put(args[1], Integer.decode(args[2]));
+        							sender.sendMessage(ChatColor.GOLD + "Data successfully set");
+        						} catch (NumberFormatException e) {
+        							sender.sendMessage(ChatColor.RED + "The data value you supplied could not be decoded");
+        						}
+    						} else {
+    							sender.sendMessage(ChatColor.RED + "The disguise you specified is not of an object");
+    						}
+    					} else {
+    						sender.sendMessage(ChatColor.RED + "A disguise with the specified name was not found");
+    					}
+    				}
     			} else if (args[0].equalsIgnoreCase("delete")) {
     				if (args.length < 2) {
     					sender.sendMessage(ChatColor.GREEN + "Usage: /dt delete <test disguise name>");
     				} else {
     					if (testDisguises.containsKey(args[1])) {
     						testDisguises.remove(args[1]);
+    						if (objectData.containsKey(args[1])) {
+    							objectData.remove(args[1]);
+    						}
+    						
     						sender.sendMessage(ChatColor.GOLD + "Test disguise \"" + args[1] + "\" deleted");
     					} else {
     						sender.sendMessage(ChatColor.RED + "A test disguise with the specified name could not be found");
@@ -256,7 +275,7 @@ public class DisguiseTester extends JavaPlugin {
     		} else {
     			sender.sendMessage(ChatColor.RED + "You do not have the permission to use this command.");
     		}
-    	} else if (label.equalsIgnoreCase("dpacket") || label.equalsIgnoreCase("dp")) {
+    	} else if (command.getName().equalsIgnoreCase("dpacket")) {
     		
     	}
     	return true;
