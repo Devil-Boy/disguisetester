@@ -2,14 +2,14 @@ package pgDev.bukkit.DisguiseTester;
 
 import java.util.LinkedList;
 
-import net.minecraft.server.v1_5_R3.Packet;
-import net.minecraft.server.v1_5_R3.Packet201PlayerInfo;
-import net.minecraft.server.v1_5_R3.Packet23VehicleSpawn;
+import net.minecraft.server.v1_6_R3.Packet;
+import net.minecraft.server.v1_6_R3.Packet201PlayerInfo;
+import net.minecraft.server.v1_6_R3.Packet23VehicleSpawn;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_6_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 
