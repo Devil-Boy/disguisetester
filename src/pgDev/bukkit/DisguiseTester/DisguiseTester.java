@@ -16,9 +16,11 @@ import java.util.logging.Logger;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import pgDev.bukkit.DisguiseCraft.DisguiseCraft;
 import pgDev.bukkit.DisguiseCraft.disguise.*;
@@ -49,6 +51,7 @@ public class DisguiseTester extends JavaPlugin {
     public List<Integer> disguiseIDs = new LinkedList<Integer>();
     public Map<String, Disguise> testDisguises = new HashMap<String, Disguise>();
     public Map<String, Integer> objectData = new HashMap<String, Integer>();
+    public Map<String, BukkitTask> scrollers = new HashMap<String, BukkitTask>();
     
     // Metadata editing methods
     public Method addData;
@@ -102,13 +105,6 @@ public class DisguiseTester extends JavaPlugin {
 		
 		// Integrate!
         setupDisguiseCraft();
-		if (pluginSettings.packetDebug) {
-			if (spoutEnabled()) {
-				//new DTPacketListener(this);
-			} else {
-				System.out.println("DisguiseTester's packet monitor requires Spout.");
-			}
-		}
         
         // Ello!
         PluginDescriptionFile pdfFile = this.getDescription();
@@ -132,10 +128,6 @@ public class DisguiseTester extends JavaPlugin {
 			logger.log(Level.WARNING, "Could not get packetlistener object", e);
 		}
     }
-    
-    public boolean spoutEnabled() {
-		return (this.getServer().getPluginManager().getPlugin("Spout") != null);
-	}
     
     // Functions
     public boolean isDC(String arg) {
@@ -268,6 +260,64 @@ public class DisguiseTester extends JavaPlugin {
     					} else {
     						sender.sendMessage(ChatColor.RED + "A test disguise with the specified name could not be found");
     					}
+    				}
+    			} else if (args[0].equalsIgnoreCase("disguisescroll") || args[0].equalsIgnoreCase("ds")) {
+    				if (sender instanceof Player) {
+    					Player player = (Player) sender;
+    					if (sender.hasPermission("disguisetester.disguise.scroll")) {
+    						if (args.length > 1) {
+    							if (args[1].equalsIgnoreCase("stop")) {
+    								if (scrollers.containsKey(player.getName())) {
+    									scrollers.get(player.getName()).cancel();
+    									sender.sendMessage(ChatColor.GOLD + "Scroll stopped");
+    								} else {
+    									sender.sendMessage(ChatColor.RED + "You aren't scrolling");
+    								}
+        						} else {
+        							try {
+        								int tickDelay = Integer.parseInt(args[1]);
+        								
+        								LinkedList<String> disguises = new LinkedList<String>();
+        	        					for (DisguiseType type : DisguiseType.values()) {
+        	        						String disguise = type.toString().toLowerCase();
+        	        						if (type == DisguiseType.Player) {
+        	        							disguises.add(disguise + " Notch");
+        	        						} else {
+        	        							disguises.add(disguise);
+        	        						}
+        	        					}
+        	        					
+        	        					scrollers.put(player.getName(), getServer().getScheduler().runTaskTimer(this, new DisguiseScroller(this, (Player) sender, disguises), 1, tickDelay));
+        	        					
+        	        					sender.sendMessage(ChatColor.GOLD + "Scrolling...");
+        							} catch (NumberFormatException e) {
+        								sender.sendMessage(ChatColor.RED + "The provided delay could not be parsed");
+        							}
+        						}
+    						} else {
+    							if (scrollers.containsKey(player.getName())) {
+    								sender.sendMessage(ChatColor.RED + "You are already scrolling");
+    							} else {
+    								LinkedList<String> disguises = new LinkedList<String>();
+    	        					for (DisguiseType type : DisguiseType.values()) {
+    	        						String disguise = type.toString().toLowerCase();
+    	        						if (type == DisguiseType.Player) {
+    	        							disguises.add(disguise + " Notch");
+    	        						} else {
+    	        							disguises.add(disguise);
+    	        						}
+    	        					}
+    	        					
+    	        					scrollers.put(player.getName(), getServer().getScheduler().runTaskTimer(this, new DisguiseScroller(this, (Player) sender, disguises), 1, 10));
+    	        					
+    	        					sender.sendMessage(ChatColor.GOLD + "Scrolling...");
+    							}
+    						}
+        				} else {
+        					sender.sendMessage(ChatColor.RED + "You do not have permission to scroll through disguises");
+        				}
+    				} else {
+    					sender.sendMessage("You must be a player to scroll through disguises");
     				}
     			} else {
     				sender.sendMessage(ChatColor.RED + "First parameter not recognized");

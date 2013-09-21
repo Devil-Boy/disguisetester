@@ -9,17 +9,16 @@ softdepend: [SpoutPlugin]
 
 commands:
    dt:
-      description: The main disguise testing command.
-      usage: /<command>
-   dpacket:
-      description: The packet manipulation command.
-      aliases: [dp]
+      description: The main disguise testing command
       usage: /<command>
 
 permissions:
     disguisetester.disguise.create:
         default: op
-        description: Can create test disguises.
+        description: Can create test disguises
     disguisetester.disguise.wear:
         default: op
-        description: Can wear test disguises.
+        description: Can wear test disguises
+    disguisetester.disguise.scroll:
+        default: op
+        description: Can scroll through DisguiseCraft disguises
