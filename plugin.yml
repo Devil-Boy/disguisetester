@@ -1,6 +1,6 @@
 name: DisguiseTester
 main: pgDev.bukkit.DisguiseTester.DisguiseTester
-version: 0.5
+version: 0.6
 author: PG Dev Team
 authors: [Devil Boy]
 description: Experiment with disguises!
