@@ -325,8 +325,30 @@ public class DisguiseTester extends JavaPlugin {
     		} else {
     			sender.sendMessage(ChatColor.RED + "You do not have the permission to use this command.");
     		}
-    	} else if (command.getName().equalsIgnoreCase("dpacket")) {
-    		
+    	} else if (command.getName().equalsIgnoreCase("dtsu")) {
+    		if (sender.hasPermission("disguisetester.su")) {
+    			if (args.length < 2) {
+    				sender.sendMessage(ChatColor.GREEN + "Usage: /" + label + " <player> <command>");
+    			} else {
+    				Player player = getServer().getPlayerExact(args[0]);
+    				if (player == null) {
+    					sender.sendMessage(ChatColor.RED + "That player could not be found");
+    				} else {
+    					String commandLine = null;
+    					for (int i=1; i < args.length; i++) {
+    						if (commandLine == null) {
+    							commandLine = args[i];
+    						} else {
+    							commandLine += " " + args[1];
+    						}
+    					}
+    					getServer().dispatchCommand(player, commandLine);
+    					sender.sendMessage(ChatColor.GOLD + "Command \"" + commandLine + "\" sent by " + player.getName());
+    				}
+    			}
+    		} else {
+    			sender.sendMessage(ChatColor.RED + "You do not have permission to use this command");
+    		}
     	}
     	return true;
     }
