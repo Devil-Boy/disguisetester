@@ -22,10 +22,14 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+
 import pgDev.bukkit.DisguiseCraft.DisguiseCraft;
+import pgDev.bukkit.DisguiseCraft.DisguiseCraft.ProtocolHook;
 import pgDev.bukkit.DisguiseCraft.disguise.*;
 import pgDev.bukkit.DisguiseCraft.listeners.DCCommandListener;
-import pgDev.bukkit.DisguiseCraft.listeners.DCPacketListener;
+import pgDev.bukkit.DisguiseCraft.listeners.protocol.PLPacketListener;
 import pgDev.bukkit.DisguiseCraft.api.DisguiseCraftAPI;
 
 public class DisguiseTester extends JavaPlugin {
@@ -34,12 +38,12 @@ public class DisguiseTester extends JavaPlugin {
     static String pluginConfigLocation = pluginMainDir + "/DisguiseTester.cfg";
     
     // Logger
-    Logger logger;
+    public static Logger logger;
     
     // DisguiseCraft Hook
     DisguiseCraft dc;
     DisguiseCraftAPI dcAPI;
-    DCPacketListener dcPL;
+    PLPacketListener dcPL;
     
     // Listener
     DTMainListener mainListener = new DTMainListener(this);
@@ -120,13 +124,15 @@ public class DisguiseTester extends JavaPlugin {
     	dc = (DisguiseCraft) getServer().getPluginManager().getPlugin("DisguiseCraft");
     	dcAPI = DisguiseCraft.getAPI();
     	
-    	try {
-    		Field field = dc.getClass().getDeclaredField("packetListener");
-    		field.setAccessible(true);
-			dcPL = (DCPacketListener) field.get(dc);
-		} catch (Exception e) {
-			logger.log(Level.WARNING, "Could not get packetlistener object", e);
-		}
+    	if (DisguiseCraft.protocolHook == ProtocolHook.ProtocolLib) {
+    		try {
+        		Field field = dc.getClass().getDeclaredField("packetListener");
+        		field.setAccessible(true);
+    			dcPL = (PLPacketListener) field.get(dc);
+    		} catch (Exception e) {
+    			logger.log(Level.WARNING, "Could not get packetlistener object", e);
+    		}
+    	}
     }
     
     // Functions
@@ -347,9 +353,44 @@ public class DisguiseTester extends JavaPlugin {
     				}
     			}
     		} else {
-    			sender.sendMessage(ChatColor.RED + "You do not have permission to use this command");
+    			sender.sendMessage(ChatColor.RED + "You do not have permission to run commands as other players");
+    		}
+    	} else if (command.getName().equalsIgnoreCase("dtprofile")) {
+    		if (sender.hasPermission("disguisetester.profile")) {
+    			if (args.length == 0) {
+    				if (sender instanceof Player) {
+    					sender.sendMessage(ChatColor.GOLD + "Information for " + sender.getName());
+    					sender.sendMessage(ChatColor.YELLOW + profileInfo(sender.getName()));
+    				} else {
+    					sender.sendMessage(ChatColor.RED + "You must specify a player name");
+    				}
+    			} else {
+    				sender.sendMessage(ChatColor.GOLD + "Information for " + args[0]);
+					sender.sendMessage(ChatColor.YELLOW + profileInfo(args[0]));
+    			}
+    		} else {
+    			sender.sendMessage(ChatColor.RED + "You do not have permission to look up GameProfile information");
     		}
     	}
     	return true;
+    }
+    
+    String profileInfo(String playerName) {
+    	GameProfile profile = DisguiseCraft.profileCache.cache(playerName);
+    	StringBuffer sb = new StringBuffer();
+    	
+    	sb.append("{\"id\":\"" + profile.getId() + "\",");
+    	sb.append("\"name\":\"" + profile.getName() + "\",");
+    	sb.append("\"properties\":[");
+    	
+    	for (Property property : profile.getProperties().values()) {
+    		sb.append("{\"name\":\"" + property.getName() + "\",");
+    		sb.append("\"value\":\"" + property.getValue() + "\",");
+    		sb.append("\"signature\":\"" + property.getSignature() + "\"}");
+    	}
+    	
+    	sb.append("]}");
+    	
+    	return sb.toString();
     }
 }

@@ -1,6 +1,6 @@
 name: DisguiseTester
 main: pgDev.bukkit.DisguiseTester.DisguiseTester
-version: 0.7
+version: 1.0
 author: PG Dev Team
 authors: [Devil Boy]
 description: Experiment with disguises!
@@ -13,6 +13,9 @@ commands:
    dtsu:
       description: Runs command as another player
       usage: /<command> <player> <commands>
+   dtprofile:
+      description: Output player profiles
+      usage: /<command> [player]
 
 permissions:
     disguisetester.disguise.create:
@@ -27,3 +30,6 @@ permissions:
     disguisetester.su:
         default: op
         description: Can run commands as other users
+    disguisetester.profile:
+        default: op
+        description: Can check GameProfile info

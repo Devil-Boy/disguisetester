@@ -1,15 +1,18 @@
 package pgDev.bukkit.DisguiseTester;
 
+import java.lang.reflect.Field;
 import java.util.LinkedList;
+import java.util.logging.Level;
 
-import net.minecraft.server.v1_6_R3.Packet;
-import net.minecraft.server.v1_6_R3.Packet201PlayerInfo;
-import net.minecraft.server.v1_6_R3.Packet23VehicleSpawn;
+import net.minecraft.server.v1_8_R2.Packet;
+import net.minecraft.server.v1_8_R2.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_8_R2.PacketPlayOutSpawnEntity;
+import net.minecraft.server.v1_8_R2.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_6_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_8_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 
@@ -39,12 +42,12 @@ public class DTMainListener implements Listener {
 							plugin.dcAPI.undisguisePlayer(player);
 						}
 						
-						plugin.dc.disguiseDB.put(player.getName(), disguise);
+						plugin.dc.disguiseDB.put(player.getUniqueId(), disguise);
 						plugin.dc.disguiseIDs.put(disguise.entityID, player);
 						disguiseBlockToWorld(disguiseName, player, player.getWorld());
 				    	
 				    	// Start position updater
-						plugin.dc.setPositionUpdater(player, disguise);
+						plugin.dc.setPositionUpdater(player.getUniqueId(), disguise);
 					} else {
 						if (plugin.dcAPI.isDisguised(player)) {
 							plugin.dcAPI.changePlayerDisguise(disguisee, disguise);
@@ -83,16 +86,22 @@ public class DTMainListener implements Listener {
 	    		if (observer.hasPermission("disguisecraft.seer")) {
 	    			toSend.addFirst(getObjectSpawnPacket(dName, disguise, player.getLocation()));
 	    			
-	    			// Keep them in tab list
-	    			if (DisguiseCraft.pluginSettings.noTabHide) {
-	    				plugin.dcPL.recentlyDisguised.add(player.getName());
-	    			} else {
-	    				toSend.add(new Packet201PlayerInfo(player.getName(), true, ((CraftPlayer) player).getHandle().ping));
-	    			}
+	    			if (plugin.dcPL != null) {
+	    				// Keep them in tab list
+		    			if (DisguiseCraft.pluginSettings.noTabHide) {
+		    				
+		    				plugin.dcPL.recentlyDisguised.add(player.getUniqueId());
+		    			} else {
+		    				toSend.add(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
+		    			}
+    				}
 				} else {
 					toSend.addFirst(getObjectSpawnPacket(dName, disguise, player.getLocation()));
-					if (DisguiseCraft.pluginSettings.noTabHide) {
-						plugin.dcPL.recentlyDisguised.add(player.getName());
+					
+					if (plugin.dcPL != null) {
+						if (DisguiseCraft.pluginSettings.noTabHide) {
+							plugin.dcPL.recentlyDisguised.add(player.getUniqueId());
+						}
 					}
 				}
 	    		observer.hidePlayer(player);
@@ -101,10 +110,16 @@ public class DTMainListener implements Listener {
     	}
 	}
 	
-	public Packet23VehicleSpawn getObjectSpawnPacket(String name, Disguise disguise, Location location) {
-		Packet23VehicleSpawn packet = disguise.packetGenerator.getObjectSpawnPacket(location);
+	public PacketPlayOutSpawnEntity getObjectSpawnPacket(String name, Disguise disguise, Location location) {
+		PacketPlayOutSpawnEntity packet = disguise.packetGenerator.getObjectSpawnPacket(location);
 		if (plugin.objectData.containsKey(name)) {
-			packet.k = plugin.objectData.get(name).intValue();
+			try {
+				Field dataField = packet.getClass().getDeclaredField("k");
+				dataField.setAccessible(true);
+				dataField.set(packet, plugin.objectData.get(name).intValue());
+			} catch (Exception e) {
+				DisguiseTester.logger.log(Level.SEVERE, "Failes to set object data", e);
+			}
 		}
 		return packet;
 	}
