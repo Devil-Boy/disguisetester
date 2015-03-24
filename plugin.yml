@@ -1,10 +1,10 @@
 name: DisguiseTester
 main: pgDev.bukkit.DisguiseTester.DisguiseTester
-version: 1.0
+version: 1.1
 author: PG Dev Team
 authors: [Devil Boy]
 description: Experiment with disguises!
-depend: [DisguiseCraft]
+softdepend: [DisguiseCraft, ProtocolLib]
 
 commands:
    dt:
@@ -16,6 +16,9 @@ commands:
    dtprofile:
       description: Output player profiles
       usage: /<command> [player]
+   dtscan:
+      description: Scan packets
+      usage: /<command>
 
 permissions:
     disguisetester.disguise.create:
@@ -33,3 +36,6 @@ permissions:
     disguisetester.profile:
         default: op
         description: Can check GameProfile info
+    disguisetester.packet.scan:
+        default: op
+        description: Can scan packets

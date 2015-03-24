@@ -1,17 +1,18 @@
-package pgDev.bukkit.DisguiseTester;
+package pgDev.bukkit.DisguiseTester.DCHook;
 
 import java.util.Queue;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class DisguiseScroller implements Runnable {
-	DisguiseTester plugin;
+	DCHook dcHook;
 	Player sender;
 	
 	Queue<String> disguises;
 	
-	public DisguiseScroller(DisguiseTester plugin, Player sender, Queue<String> disguises) {
-		this.plugin = plugin;
+	public DisguiseScroller(DCHook dcHook, Player sender, Queue<String> disguises) {
+		this.dcHook = dcHook;
 		this.sender = sender;
 		this.disguises = disguises;
 	}
@@ -23,7 +24,7 @@ public class DisguiseScroller implements Runnable {
 			if (disguise == null) {
 				endScroll();
 			} else {
-				plugin.getServer().dispatchCommand(sender, "disguise " + disguise);
+				Bukkit.getServer().dispatchCommand(sender, "disguise " + disguise);
 			}
 		} else {
 			endScroll();
@@ -31,6 +32,6 @@ public class DisguiseScroller implements Runnable {
 	}
 	
 	public void endScroll() {
-		plugin.scrollers.remove(sender.getName()).cancel();
+		dcHook.scrollers.remove(sender.getName()).cancel();
 	}
 }

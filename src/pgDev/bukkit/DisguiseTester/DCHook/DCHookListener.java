@@ -1,4 +1,4 @@
-package pgDev.bukkit.DisguiseTester;
+package pgDev.bukkit.DisguiseTester.DCHook;
 
 import java.lang.reflect.Field;
 import java.util.LinkedList;
@@ -19,40 +19,41 @@ import org.bukkit.event.*;
 import pgDev.bukkit.DisguiseCraft.DisguiseCraft;
 import pgDev.bukkit.DisguiseCraft.disguise.*;
 import pgDev.bukkit.DisguiseCraft.api.*;
+import pgDev.bukkit.DisguiseTester.DisguiseTester;
 
-public class DTMainListener implements Listener {
-	final DisguiseTester plugin;
+public class DCHookListener implements Listener {
+	final DCHook dcHook;
 	
-	public DTMainListener(final DisguiseTester plugin) {
-		this.plugin = plugin;
+	public DCHookListener(final DCHook dcHook) {
+		this.dcHook = dcHook;
 	}
 	
 	@EventHandler
 	public void onDisguiseCommand(DCCommandEvent event) {
 		if (event.getLabel().toLowerCase().startsWith("d") && event.getArgs().length > 0) {
 			String disguiseName = event.getArgs()[0];
-			if (plugin.testDisguises.containsKey(disguiseName)) {
+			if (dcHook.testDisguises.containsKey(disguiseName)) {
 				if (event.getSender().hasPermission("disguisetester.disguise.wear")) {
 					Player disguisee = event.getPlayer();
-					Disguise disguise = plugin.testDisguises.get(disguiseName);
+					Disguise disguise = dcHook.testDisguises.get(disguiseName);
 					Player player = event.getPlayer();
 					
 					if (disguise.type.isObject()) {
-						if (plugin.dcAPI.isDisguised(player)) {
-							plugin.dcAPI.undisguisePlayer(player);
+						if (dcHook.dcAPI.isDisguised(player)) {
+							dcHook.dcAPI.undisguisePlayer(player);
 						}
 						
-						plugin.dc.disguiseDB.put(player.getUniqueId(), disguise);
-						plugin.dc.disguiseIDs.put(disguise.entityID, player);
+						dcHook.dc.disguiseDB.put(player.getUniqueId(), disguise);
+						dcHook.dc.disguiseIDs.put(disguise.entityID, player);
 						disguiseBlockToWorld(disguiseName, player, player.getWorld());
 				    	
 				    	// Start position updater
-						plugin.dc.setPositionUpdater(player.getUniqueId(), disguise);
+						dcHook.dc.setPositionUpdater(player.getUniqueId(), disguise);
 					} else {
-						if (plugin.dcAPI.isDisguised(player)) {
-							plugin.dcAPI.changePlayerDisguise(disguisee, disguise);
+						if (dcHook.dcAPI.isDisguised(player)) {
+							dcHook.dcAPI.changePlayerDisguise(disguisee, disguise);
 						} else {
-							plugin.dcAPI.disguisePlayer(disguisee, disguise);
+							dcHook.dcAPI.disguisePlayer(disguisee, disguise);
 						}
 					}
 					
@@ -66,31 +67,31 @@ public class DTMainListener implements Listener {
 	@EventHandler
 	public void onDisguise(PlayerDisguiseEvent event) {
 		if (!event.isCancelled()) {
-			plugin.disguiseIDs.add(event.getDisguise().entityID);
+			dcHook.disguiseIDs.add(event.getDisguise().entityID);
 		}
 	}
 	
 	@EventHandler
 	public void onUnDisguise(PlayerUndisguiseEvent event) {
 		if (!event.isCancelled()) {
-			plugin.disguiseIDs.remove((Object) plugin.dcAPI.getDisguise(event.getPlayer()).entityID);
+			dcHook.disguiseIDs.remove((Object) dcHook.dcAPI.getDisguise(event.getPlayer()).entityID);
 		}
 	}
 	
 	public void disguiseBlockToWorld(String dName, Player player, World world) {
 		LinkedList<Packet> toSend = new LinkedList<Packet>();
-		Disguise disguise = plugin.dcAPI.getDisguise(player);
+		Disguise disguise = dcHook.dcAPI.getDisguise(player);
     	
     	for (Player observer : world.getPlayers()) {
 	    	if (observer != player) {
 	    		if (observer.hasPermission("disguisecraft.seer")) {
 	    			toSend.addFirst(getObjectSpawnPacket(dName, disguise, player.getLocation()));
 	    			
-	    			if (plugin.dcPL != null) {
+	    			if (dcHook.dcPL != null) {
 	    				// Keep them in tab list
 		    			if (DisguiseCraft.pluginSettings.noTabHide) {
 		    				
-		    				plugin.dcPL.recentlyDisguised.add(player.getUniqueId());
+		    				dcHook.dcPL.recentlyDisguised.add(player.getUniqueId());
 		    			} else {
 		    				toSend.add(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.ADD_PLAYER, ((CraftPlayer) player).getHandle()));
 		    			}
@@ -98,25 +99,25 @@ public class DTMainListener implements Listener {
 				} else {
 					toSend.addFirst(getObjectSpawnPacket(dName, disguise, player.getLocation()));
 					
-					if (plugin.dcPL != null) {
+					if (dcHook.dcPL != null) {
 						if (DisguiseCraft.pluginSettings.noTabHide) {
-							plugin.dcPL.recentlyDisguised.add(player.getUniqueId());
+							dcHook.dcPL.recentlyDisguised.add(player.getUniqueId());
 						}
 					}
 				}
 	    		observer.hidePlayer(player);
-	    		plugin.dc.sendPacketsToObserver(observer, toSend);
+	    		dcHook.dc.sendPacketsToObserver(observer, toSend);
     		}
     	}
 	}
 	
 	public PacketPlayOutSpawnEntity getObjectSpawnPacket(String name, Disguise disguise, Location location) {
 		PacketPlayOutSpawnEntity packet = disguise.packetGenerator.getObjectSpawnPacket(location);
-		if (plugin.objectData.containsKey(name)) {
+		if (dcHook.objectData.containsKey(name)) {
 			try {
 				Field dataField = packet.getClass().getDeclaredField("k");
 				dataField.setAccessible(true);
-				dataField.set(packet, plugin.objectData.get(name).intValue());
+				dataField.set(packet, dcHook.objectData.get(name).intValue());
 			} catch (Exception e) {
 				DisguiseTester.logger.log(Level.SEVERE, "Failes to set object data", e);
 			}
